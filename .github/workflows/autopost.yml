@@ -2,23 +2,28 @@ name: Auto Post Tech News
 
 on:
   schedule:
-    - cron: "0 * * * *"   # runs every hour
-  workflow_dispatch:       # manual trigger
+    # Pakistan times: 09:00,13:00,17:00,21:00,23:00 PKT -> UTC times: 04:00,08:00,12:00,16:00,18:00
+    - cron: "0 4 * * *"
+    - cron: "0 8 * * *"
+    - cron: "0 12 * * *"
+    - cron: "0 16 * * *"
+    - cron: "0 18 * * *"
+  workflow_dispatch:
 
 jobs:
   autopost:
     runs-on: ubuntu-latest
 
-    # Inline environment variables (replace with your actual username/password)
+    # Inline env (replace with your actual values)
     env:
-      THREADS_USERNAME: 'your_threads_username_here'
-      THREADS_PASSWORD: 'your_threads_password_here'
+      THREADS_USERNAME: 'your_threads_username'
+      THREADS_PASSWORD: 'your_threads_password'
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
@@ -26,7 +31,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install feedparser playwright schedule
+          # install playwright browsers
+          playwright install chromium
 
-      - name: Run Auto Poster
+      - name: Run Auto Poster (one-shot)
         run: python main.py
