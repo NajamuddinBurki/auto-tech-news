@@ -1,17 +1,16 @@
 import feedparser
 from threads_api import ThreadsAPI
-import schedule
-import time
 from datetime import datetime
 
 # TechCrunch RSS feed
 RSS_URL = "https://techcrunch.com/feed/"
 
-# Threads login (⚠️ keep private: use GitHub Secrets!)
+# Threads login (⚠️ put in GitHub Secrets if repo is public)
 USERNAME = "thenajamburki"
 PASSWORD = "Jeju12345@"
 
 api = ThreadsAPI(username=USERNAME, password=PASSWORD)
+
 def fetch_news():
     feed = feedparser.parse(RSS_URL)
     headlines = [entry.title for entry in feed.entries[:5]]
@@ -33,15 +32,5 @@ def job():
     if posts:
         post_to_threads(posts[0])
 
-# Schedule 5 posts a day
-schedule.every().day.at("09:00").do(job)
-schedule.every().day.at("13:00").do(job)
-schedule.every().day.at("17:00").do(job)
-schedule.every().day.at("21:00").do(job)
-schedule.every().day.at("23:00").do(job)
-
-print("✅ Scheduler started. Waiting for times...")
-
-while True:
-    schedule.run_pending()
-    time.sleep(30)
+if __name__ == "__main__":
+    job()
