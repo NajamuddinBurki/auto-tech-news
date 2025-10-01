@@ -1,32 +1,31 @@
 import feedparser
+from threads_api import ThreadsAPI
 import schedule
 import time
 from datetime import datetime
-from threads_api.src.threads_api import ThreadsAPI  # ✅ PyPI version import
 
 # TechCrunch RSS feed
 RSS_URL = "https://techcrunch.com/feed/"
 
+# Threads login (⚠️ should use secrets in real project)
 USERNAME = "thenajamburki"
 PASSWORD = "Jeju12345@"
 
-api = ThreadsAPI()  
-api.login(USERNAME, PASSWORD)
+api = ThreadsAPI()
+api.login(USERNAME, PASSWORD)  # ✅ login first
 
 def fetch_news():
-    """Fetch top 5 latest TechCrunch headlines"""
     feed = feedparser.parse(RSS_URL)
-    return [entry.title for entry in feed.entries[:5]]
+    headlines = [entry.title for entry in feed.entries[:5]]
+    return headlines
 
 def create_posts_from_news():
-    """Format posts for Threads"""
     headlines = fetch_news()
     return [f"📰 Tech Update: {hl}\n\n#TechNews #Innovation" for hl in headlines]
 
 def post_to_threads(post_text):
-    """Post content to Threads"""
     try:
-        api.create_post(text=post_text)  # ✅ method name for PyPI
+        api.publish(text=post_text)  # ✅ correct method
         print(f"[{datetime.now()}] ✅ Posted: {post_text[:50]}...")
     except Exception as e:
         print(f"[{datetime.now()}] ❌ Error posting: {e}")
@@ -36,6 +35,18 @@ def job():
     if posts:
         post_to_threads(posts[0])
 
-# Since GitHub Actions runs multiple times per day (via cron),
-# we only need ONE post per run (no while loop needed).
+# 🔥 Post immediately on workflow start
 job()
+
+# Schedule 5 posts a day
+schedule.every().day.at("09:00").do(job)
+schedule.every().day.at("13:00").do(job)
+schedule.every().day.at("17:00").do(job)
+schedule.every().day.at("21:00").do(job)
+schedule.every().day.at("23:00").do(job)
+
+print("✅ Scheduler started. Waiting for times...")
+
+while True:
+    schedule.run_pending()
+    time.sleep(30)
