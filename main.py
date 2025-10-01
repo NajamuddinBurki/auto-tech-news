@@ -1,26 +1,36 @@
+import asyncio
 import feedparser
 import schedule
 import time
-
-# ✅ Flexible import for ThreadsAPI
-try:
-    from threads_api import ThreadsAPI  # some builds expose it here
-except ImportError:
-    from threads_api.src.threads_api import ThreadsAPI  # fallback for PyPI/src layout
-
-# Load credentials from environment variables
 import os
+
+# ✅ Patch: Ensure event loop exists
+try:
+    asyncio.get_running_loop()
+except RuntimeError:
+    asyncio.set_event_loop(asyncio.new_event_loop())
+
+# Flexible import for ThreadsAPI
+try:
+    from threads_api import ThreadsAPI
+except ImportError:
+    from threads_api.src.threads_api import ThreadsAPI
+
 USERNAME = os.getenv("THREADS_USERNAME")
 PASSWORD = os.getenv("THREADS_PASSWORD")
 
-# Initialize API (no username/password args, login is separate)
 api = ThreadsAPI()
-api.login(USERNAME, PASSWORD)  # ✅ login call
 
-# Example: Fetch TechCrunch feed
+# Wrap login into asyncio loop
+async def login():
+    await api.login(USERNAME, PASSWORD)
+
+asyncio.get_event_loop().run_until_complete(login())
+
+# RSS feed
 RSS_FEED = "https://techcrunch.com/feed/"
 
-def post_latest_news():
+async def post_latest_news():
     feed = feedparser.parse(RSS_FEED)
     if not feed.entries:
         print("[WARN] No entries found in RSS feed")
@@ -32,13 +42,16 @@ def post_latest_news():
     content = f"{title}\n\nRead more: {link}"
 
     try:
-        api.post(content)  # ✅ correct method (not create_post)
+        await api.post(content)   # ✅ async-safe
         print(f"[INFO] Posted: {title}")
     except Exception as e:
         print(f"[ERROR] Failed to post: {e}")
 
-# Schedule job every hour
-schedule.every(1).hours.do(post_latest_news)
+def job():
+    asyncio.get_event_loop().run_until_complete(post_latest_news())
+
+# Schedule every hour
+schedule.every(1).hours.do(job)
 
 print("[INFO] Auto Tech News Poster started...")
 
