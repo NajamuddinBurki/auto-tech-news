@@ -1,45 +1,43 @@
-from playwright.sync_api import sync_playwright
 import feedparser
-import random
+import schedule
+import time
 from datetime import datetime
+from threads_api.src.threads_api import ThreadsAPI  # ✅ PyPI version import
 
+# TechCrunch RSS feed
 RSS_URL = "https://techcrunch.com/feed/"
 
+# ⚠️ Use GitHub Secrets in production
 USERNAME = "your_threads_username"
 PASSWORD = "your_threads_password"
 
-def fetch_news():
-    feed = feedparser.parse(RSS_URL)
-    return [entry.title for entry in feed.entries[:10]]
+# Initialize Threads API
+api = ThreadsAPI(username=USERNAME, password=PASSWORD)
+api.login()
 
-def create_post(headline):
-    return f"📰 Tech Update: {headline}\n\n#TechNews #Innovation #TechCrunch"
+def fetch_news():
+    """Fetch top 5 latest TechCrunch headlines"""
+    feed = feedparser.parse(RSS_URL)
+    return [entry.title for entry in feed.entries[:5]]
+
+def create_posts_from_news():
+    """Format posts for Threads"""
+    headlines = fetch_news()
+    return [f"📰 Tech Update: {hl}\n\n#TechNews #Innovation" for hl in headlines]
 
 def post_to_threads(post_text):
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto("https://www.threads.net/login")
-        page.fill('input[name="username"]', USERNAME)
-        page.fill('input[name="password"]', PASSWORD)
-        page.click('button[type="submit"]')
-        page.wait_for_timeout(5000)
-        page.click("text=New Thread")
-        page.fill("textarea", post_text)
-        page.click("text=Post")
-        page.wait_for_timeout(5000)
-        browser.close()
-        print(f"[{datetime.now()}] Posted: {post_text[:50]}")
+    """Post content to Threads"""
+    try:
+        api.create_post(text=post_text)  # ✅ method name for PyPI
+        print(f"[{datetime.now()}] ✅ Posted: {post_text[:50]}...")
+    except Exception as e:
+        print(f"[{datetime.now()}] ❌ Error posting: {e}")
 
 def job():
-    headlines = fetch_news()
-    if not headlines:
-        print("⚠️ No headlines fetched")
-        return
-    headline = random.choice(headlines)
-    post_text = create_post(headline)
-    print(f"Posting: {post_text[:50]}")
-    post_to_threads(post_text)
+    posts = create_posts_from_news()
+    if posts:
+        post_to_threads(posts[0])
 
-if __name__ == "__main__":
-    job()
+# Since GitHub Actions runs multiple times per day (via cron),
+# we only need ONE post per run (no while loop needed).
+job()
