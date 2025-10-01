@@ -1,29 +1,35 @@
-name: Auto Post Tech News
+name: Auto Poster
 
 on:
   schedule:
-    # Run every 6 hours
-    - cron: "0 */6 * * *"
-  workflow_dispatch: # still allows manual trigger
+    - cron: "0 */6 * * *"   # every 6 hours
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install feedparser schedule threads-api cryptography colorama instagrapi
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          # Freeze unstable libs to safe versions
+          pip install "pydantic<2.0" "threads-api>=1.2.9,<2.0.0" \
+                      feedparser playwright schedule instagrapi \
+                      cryptography colorama
+          playwright install chromium
 
-    - name: Run auto poster
-      run: |
-        python main.py
+      - name: Run auto poster
+        env:
+          THREADS_USERNAME: ${{ secrets.THREADS_USERNAME }}
+          THREADS_PASSWORD: ${{ secrets.THREADS_PASSWORD }}
+        run: |
+          python main.py
