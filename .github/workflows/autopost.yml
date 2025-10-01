@@ -1,9 +1,34 @@
-# after checkout & setup Python
-- name: Install dependencies
-  run: |
-    pip install feedparser playwright schedule
-    playwright install chromium
+name: Auto Post Tech News
 
-- name: Run auto poster
-  run: |
-    python main.py
+on:
+  schedule:
+    # Runs 5 times a day at 09:00, 13:00, 17:00, 21:00, 23:00 UTC
+    - cron: "0 9 * * *"
+    - cron: "0 13 * * *"
+    - cron: "0 17 * * *"
+    - cron: "0 21 * * *"
+    - cron: "0 23 * * *"
+  workflow_dispatch:  # lets you also trigger manually
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install feedparser schedule
+          pip install git+https://github.com/Dorukyum/threads-api
+          pip install playwright
+          playwright install chromium
+
+      - name: Run auto poster
+        run: python main.py
