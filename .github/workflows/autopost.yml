@@ -1,0 +1,25 @@
+name: Auto Post Tech News
+
+on:
+  schedule:
+    - cron: "0 9,13,17,21,23 * * *"   # Run at 9AM, 1PM, 5PM, 9PM, 11PM (UTC)
+  workflow_dispatch:                   # allow manual run from GitHub
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run script
+        run: python main.py
