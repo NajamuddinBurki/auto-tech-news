@@ -2,13 +2,12 @@ name: Auto Post Tech News
 
 on:
   schedule:
-    # Runs 5 times a day at 09:00, 13:00, 17:00, 21:00, 23:00 UTC
     - cron: "0 9 * * *"
     - cron: "0 13 * * *"
     - cron: "0 17 * * *"
     - cron: "0 21 * * *"
     - cron: "0 23 * * *"
-  workflow_dispatch:  # lets you also trigger manually
+  workflow_dispatch:
 
 jobs:
   build:
@@ -25,9 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install feedparser schedule
-          pip install git+https://github.com/Dorukyum/threads-api
-          pip install playwright
+          pip install feedparser schedule playwright threads-api
           playwright install chromium
 
       - name: Run auto poster
