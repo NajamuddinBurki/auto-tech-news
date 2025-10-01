@@ -34,7 +34,7 @@ jobs:
             colorama==0.4.6 \
             aiohttp==3.9.3 \
             requests==2.31.0 \
-            instagrapi==1.16.43 \
+            instagrapi==1.16.42 \
             pyjwt==2.8.0 \
             loguru==0.7.2
           playwright install chromium
