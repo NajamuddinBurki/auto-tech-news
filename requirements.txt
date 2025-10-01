@@ -1,5 +1,5 @@
 # Core
-threads-api==1.2.9
+threads-api==1.2.0
 instagrapi==1.16.42
 feedparser==6.0.11
 schedule==1.2.0
@@ -11,10 +11,10 @@ playwright==1.47.0
 # Security / crypto
 cryptography==42.0.5
 
-# Lock Pydantic to avoid _typename issue
+# Force Pydantic v1 to avoid _typename crash
 pydantic==1.10.14
 
-# Ensure packaging tools are stable
+# Packaging stability
 setuptools==75.1.0
 wheel==0.44.0
 pip==24.2
