@@ -24,8 +24,19 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install feedparser schedule playwright \
-            threads-api cryptography colorama pydantic aiohttp requests instagrapi pyjwt loguru
+          pip install \
+            "pydantic<2" \
+            feedparser==6.0.12 \
+            schedule==1.2.2 \
+            playwright==1.41.2 \
+            threads-api==1.0.6 \
+            cryptography==41.0.7 \
+            colorama==0.4.6 \
+            aiohttp==3.9.3 \
+            requests==2.31.0 \
+            instagrapi==1.16.43 \
+            pyjwt==2.8.0 \
+            loguru==0.7.2
           playwright install chromium
 
       - name: Run auto poster
