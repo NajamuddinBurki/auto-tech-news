@@ -1,18 +1,18 @@
 import feedparser
-from threads_api import ThreadsAPI
 import schedule
 import time
 from datetime import datetime
+from threads_api.src.threads_api import ThreadsAPI  # ✅ correct import
 
 # TechCrunch RSS feed
 RSS_URL = "https://techcrunch.com/feed/"
 
-# Threads login (⚠️ should use secrets in real project)
+# Threads login
 USERNAME = "thenajamburki"
 PASSWORD = "Jeju12345@"
 
 api = ThreadsAPI()
-api.login(USERNAME, PASSWORD)  # ✅ login first
+api.login(USERNAME, PASSWORD)
 
 def fetch_news():
     feed = feedparser.parse(RSS_URL)
@@ -25,7 +25,7 @@ def create_posts_from_news():
 
 def post_to_threads(post_text):
     try:
-        api.publish(text=post_text)  # ✅ correct method
+        api.post_text(post_text)   # ✅ correct method
         print(f"[{datetime.now()}] ✅ Posted: {post_text[:50]}...")
     except Exception as e:
         print(f"[{datetime.now()}] ❌ Error posting: {e}")
@@ -35,7 +35,7 @@ def job():
     if posts:
         post_to_threads(posts[0])
 
-# 🔥 Post immediately on workflow start
+# 🔥 Post immediately when script starts
 job()
 
 # Schedule 5 posts a day
