@@ -1,24 +1,24 @@
 import feedparser
-from threads_api import ThreadsAPI
+from threads_api.src.threads_api import ThreadsAPI
 from datetime import datetime
 import random
 
 # TechCrunch RSS feed
 RSS_URL = "https://techcrunch.com/feed/"
 
-# Threads login (⚠️ best to use GitHub Secrets in production!)
+# ⚠️ Currently hardcoded, but best practice is to move into GitHub Secrets later
 USERNAME = "thenajamburki"
 PASSWORD = "Jeju12345@"
 
+# Initialize Threads API
 api = ThreadsAPI(username=USERNAME, password=PASSWORD)
 
 def fetch_news():
-    """Fetch the latest headlines from TechCrunch RSS"""
+    """Fetch latest TechCrunch headlines"""
     feed = feedparser.parse(RSS_URL)
-    headlines = [entry.title for entry in feed.entries[:10]]  # get top 10
-    return headlines
+    return [entry.title for entry in feed.entries[:10]]
 
-def create_post_from_headline(headline):
+def create_post(headline):
     """Format the post text"""
     return f"📰 Tech Update: {headline}\n\n#TechNews #Innovation #TechCrunch"
 
@@ -28,19 +28,16 @@ def post_to_threads(post_text):
         api.post(text=post_text)
         print(f"[{datetime.now()}] ✅ Posted: {post_text[:50]}...")
     except Exception as e:
-        print(f"[{datetime.now()}] ❌ Error posting: {e}")
+        print(f"[{datetime.now()}] ❌ Error: {e}")
 
 def job():
-    """Main job that picks a random headline and posts"""
+    """Pick one random headline and post it"""
     headlines = fetch_news()
-    if not headlines:
+    if headlines:
+        headline = random.choice(headlines)
+        post_to_threads(create_post(headline))
+    else:
         print("⚠️ No headlines fetched.")
-        return
-    
-    # pick a random headline each time
-    headline = random.choice(headlines)
-    post_text = create_post_from_headline(headline)
-    post_to_threads(post_text)
 
 if __name__ == "__main__":
-    job()  # runs once (GitHub Actions handles timing)
+    job()
