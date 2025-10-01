@@ -2,42 +2,28 @@ name: Auto Post Tech News
 
 on:
   schedule:
-    - cron: "0 9 * * *"
-    - cron: "0 13 * * *"
-    - cron: "0 17 * * *"
-    - cron: "0 21 * * *"
-    - cron: "0 23 * * *"
-  workflow_dispatch:
+    # Run every 6 hours
+    - cron: "0 */6 * * *"
+  workflow_dispatch: # still allows manual trigger
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+    - name: Checkout repo
+      uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
 
-      - name: Install dependencies
-        run: |
-          pip install \
-            "pydantic<2" \
-            feedparser==6.0.12 \
-            schedule==1.2.2 \
-            playwright==1.41.2 \
-            threads-api==1.0.6 \
-            cryptography==41.0.7 \
-            colorama==0.4.6 \
-            aiohttp==3.9.3 \
-            requests==2.31.0 \
-            instagrapi==1.16.42 \
-            pyjwt==2.8.0 \
-            loguru==0.7.2
-          playwright install chromium
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install feedparser schedule threads-api cryptography colorama instagrapi
 
-      - name: Run auto poster
-        run: python main.py
+    - name: Run auto poster
+      run: |
+        python main.py
