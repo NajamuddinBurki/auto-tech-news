@@ -1,53 +1,47 @@
-import sys
-import logging
+import feedparser
+import schedule
+import time
 
-logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s - %(message)s")
-
+# ✅ Flexible import for ThreadsAPI
 try:
-    # Preferred import (PyPI packaged version)
-    from threads_api import ThreadsAPI
-    logging.info("✅ Imported ThreadsAPI (top-level)")
+    from threads_api import ThreadsAPI  # some builds expose it here
 except ImportError:
-    try:
-        # Fallback for source structure
-        from threads_api.src.threads_api import ThreadsAPI
-        logging.info("✅ Imported ThreadsAPI (src fallback)")
-    except ImportError as e:
-        logging.error("❌ Cannot import ThreadsAPI. Check threads_api install.")
-        sys.exit(1)
+    from threads_api.src.threads_api import ThreadsAPI  # fallback for PyPI/src layout
 
-
-# ---------------------------
-# Config (Secrets stored in GH Actions env vars)
-# ---------------------------
+# Load credentials from environment variables
 import os
-
 USERNAME = os.getenv("THREADS_USERNAME")
 PASSWORD = os.getenv("THREADS_PASSWORD")
 
-if not USERNAME or not PASSWORD:
-    logging.error("❌ Missing THREADS_USERNAME or THREADS_PASSWORD env vars.")
-    sys.exit(1)
+# Initialize API (no username/password args, login is separate)
+api = ThreadsAPI()
+api.login(USERNAME, PASSWORD)  # ✅ login call
 
+# Example: Fetch TechCrunch feed
+RSS_FEED = "https://techcrunch.com/feed/"
 
-# ---------------------------
-# API Init (adjust to current threads_api)
-# ---------------------------
-try:
-    api = ThreadsAPI()
-    api.login(USERNAME, PASSWORD)
-    logging.info("✅ Logged into Threads API")
-except Exception as e:
-    logging.error(f"❌ Login failed: {e}")
-    sys.exit(1)
+def post_latest_news():
+    feed = feedparser.parse(RSS_FEED)
+    if not feed.entries:
+        print("[WARN] No entries found in RSS feed")
+        return
 
+    latest = feed.entries[0]
+    title = latest.title
+    link = latest.link
+    content = f"{title}\n\nRead more: {link}"
 
-# ---------------------------
-# Example post
-# ---------------------------
-try:
-    post_id = api.publish("🚀 Auto post test from GitHub Actions")
-    logging.info(f"✅ Post published successfully (ID: {post_id})")
-except Exception as e:
-    logging.error(f"❌ Error posting: {e}")
-    sys.exit(1)
+    try:
+        api.post(content)  # ✅ correct method (not create_post)
+        print(f"[INFO] Posted: {title}")
+    except Exception as e:
+        print(f"[ERROR] Failed to post: {e}")
+
+# Schedule job every hour
+schedule.every(1).hours.do(post_latest_news)
+
+print("[INFO] Auto Tech News Poster started...")
+
+while True:
+    schedule.run_pending()
+    time.sleep(30)
