@@ -2,13 +2,12 @@ name: Auto Post Tech News
 
 on:
   schedule:
-    # UTC times (these match 9AM, 1PM, 5PM, 9PM, 11PM Pakistan time)
     - cron: "0 4 * * *"   # 09:00 PKT
     - cron: "0 8 * * *"   # 13:00 PKT
     - cron: "0 12 * * *"  # 17:00 PKT
     - cron: "0 16 * * *"  # 21:00 PKT
     - cron: "0 18 * * *"  # 23:00 PKT
-  workflow_dispatch: # allow manual run from Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
@@ -24,7 +23,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install feedparser git+https://github.com/dmytrostriletskyi/threads-api
+          pip install feedparser git+https://github.com/Dorukyum/threads-api
 
       - name: Run auto poster
         run: |
