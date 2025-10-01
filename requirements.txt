@@ -1,3 +1,20 @@
-feedparser
-schedule
-threads-api
+# Core
+threads-api==1.2.9
+instagrapi==1.16.42
+feedparser==6.0.11
+schedule==1.2.0
+colorama==0.4.6
+
+# Web scraping / automation
+playwright==1.47.0
+
+# Security / crypto
+cryptography==42.0.5
+
+# Lock Pydantic to avoid _typename issue
+pydantic==1.10.14
+
+# Ensure packaging tools are stable
+setuptools==75.1.0
+wheel==0.44.0
+pip==24.2
