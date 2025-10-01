@@ -7,13 +7,11 @@ from threads_api.src.threads_api import ThreadsAPI  # ✅ PyPI version import
 # TechCrunch RSS feed
 RSS_URL = "https://techcrunch.com/feed/"
 
-# ⚠️ Use GitHub Secrets in production
-USERNAME = "your_threads_username"
-PASSWORD = "your_threads_password"
+USERNAME = "thenajamburki"
+PASSWORD = "Jeju12345@"
 
-# Initialize Threads API
-api = ThreadsAPI(username=USERNAME, password=PASSWORD)
-api.login()
+api = ThreadsAPI()  
+api.login(USERNAME, PASSWORD)
 
 def fetch_news():
     """Fetch top 5 latest TechCrunch headlines"""
