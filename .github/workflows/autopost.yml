@@ -2,16 +2,17 @@ name: Auto Post Tech News
 
 on:
   schedule:
-    - cron: "0 * * * *"   # ⏰ Runs every hour
-  workflow_dispatch:       # 🔘 Manual trigger option
+    - cron: "0 * * * *"   # runs every hour
+  workflow_dispatch:       # manual trigger
 
 jobs:
   autopost:
     runs-on: ubuntu-latest
 
-    env:   # 🔥 Default environment variables
-      THREADS_USERNAME: "your_username_here"
-      THREADS_PASSWORD: "your_password_here"
+    # Inline environment variables (replace with your actual username/password)
+    env:
+      THREADS_USERNAME: 'your_threads_username_here'
+      THREADS_PASSWORD: 'your_threads_password_here'
 
     steps:
       - name: Checkout repository
