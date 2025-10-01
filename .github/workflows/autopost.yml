@@ -24,7 +24,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install feedparser schedule playwright threads-api cryptography colorama pydantic aiohttp requests
+          pip install feedparser schedule playwright \
+            threads-api cryptography colorama pydantic aiohttp requests instagrapi pyjwt loguru
           playwright install chromium
 
       - name: Run auto poster
