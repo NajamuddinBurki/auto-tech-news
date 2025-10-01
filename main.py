@@ -11,7 +11,7 @@ RSS_URL = "https://techcrunch.com/feed/"
 USERNAME = "your_threads_username"
 PASSWORD = "your_threads_password"
 
-api = ThreadsAPI(username=USERNAME, password=PASSWORD)
+api = ThreadsAPI(username=thenajamburki, password=Jeju12345@)
 
 def fetch_news():
     feed = feedparser.parse(RSS_URL)
