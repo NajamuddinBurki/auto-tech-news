@@ -8,11 +8,10 @@ from datetime import datetime
 RSS_URL = "https://techcrunch.com/feed/"
 
 # Threads login (⚠️ keep private: use GitHub Secrets!)
-USERNAME = "your_threads_username"
-PASSWORD = "your_threads_password"
+USERNAME = "thenajamburki"
+PASSWORD = "Jeju12345@"
 
-api = ThreadsAPI(username=thenajamburki, password=Jeju12345@)
-
+api = ThreadsAPI(username=USERNAME, password=PASSWORD)
 def fetch_news():
     feed = feedparser.parse(RSS_URL)
     headlines = [entry.title for entry in feed.entries[:5]]
