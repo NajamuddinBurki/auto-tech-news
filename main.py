@@ -2,8 +2,9 @@ import os
 import asyncio
 from playwright.async_api import async_playwright
 
-USERNAME = os.getenv("thenajamburki", "thenajamburki")
-PASSWORD = os.getenv("Jeju12345@", "Jeju12345@")
+USERNAME = os.getenv("THREADS_USERNAME", "thenajamburki")
+PASSWORD = os.getenv("THREADS_PASSWORD", "Jeju12345@")
+
 
 THREADS_URL = "https://www.threads.net/login"
 
