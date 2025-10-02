@@ -1,8 +1,8 @@
-name: Auto Post Tech News
+name: AutoPost Tech News
 
 on:
-  schedule:
-    - cron: "0 * * * *" # every hour
+  push:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -23,29 +23,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Install Playwright Browsers
+        run: playwright install --with-deps
+
       - name: Run autopost script
         run: python main.py
-        env:
-          THREADS_USERNAME: ${{ secrets.THREADS_USERNAME }}
-          THREADS_PASSWORD: ${{ secrets.THREADS_PASSWORD }}
 
-      - name: Upload screenshots (for debugging)
-        if: always()
+      - name: Upload debug artifacts (screenshots, traces)
         uses: actions/upload-artifact@v4
         with:
-          name: debug-screenshots
+          name: playwright-debug
           path: |
             *.png
             playwright-report
             traces
-
-  # Optional job to collect artifacts if you need them
-  download-artifacts:
-    runs-on: ubuntu-latest
-    needs: autopost
-    steps:
-      - name: Download screenshots
-        uses: actions/download-artifact@v4
-        with:
-          name: debug-screenshots
-          path: artifacts
+          if-no-files-found: ignore
