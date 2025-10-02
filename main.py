@@ -2,9 +2,8 @@ import os
 import asyncio
 from playwright.async_api import async_playwright
 
-# --- Credentials (fallback defaults, but prefer GitHub Actions secrets) ---
-USERNAME = os.getenv("THREADS_USERNAME", "thenajamburki")
-PASSWORD = os.getenv("THREADS_PASSWORD", "Jeju12345@")
+USERNAME = os.getenv("thenajamburki", "thenajamburki")
+PASSWORD = os.getenv("Jeju12345@", "Jeju12345@")
 
 THREADS_URL = "https://www.threads.net/login"
 
@@ -19,64 +18,51 @@ async def post_to_threads():
             print("[INFO] Navigating to Threads login...")
             await page.goto(THREADS_URL, timeout=60000)
 
-            # --- Username field ---
+            # Username
             print("[INFO] Finding username field...")
-            username_selector = "input[name='username'], input[name='email'], input[name='usernameOrEmail'], input[type='text']"
+            username_selector = "input[name='username'], input[name='email'], input[type='text']"
             await page.wait_for_selector(username_selector, timeout=60000)
             await page.fill(username_selector, USERNAME)
 
-            # --- Password field ---
+            # Password
             print("[INFO] Finding password field...")
             password_selector = "input[type='password']"
             await page.wait_for_selector(password_selector, timeout=30000)
             await page.fill(password_selector, PASSWORD)
 
-            # --- Login button ---
-            try:
-                print("[INFO] Trying to click login button...")
+            # Login button
+            print("[INFO] Trying to click login button...")
+            login_btn = page.get_by_role("button", name="Log in").first
+            await login_btn.click(timeout=15000)
+            print("[INFO] Clicked login button ✅")
 
-                login_btn = None
-                for locator in [
-                    page.get_by_role("button", name="Log in"),
-                    page.get_by_role("button", name="Log In"),
-                    page.locator("button[type='submit']")
-                ]:
-                    if await locator.count() > 0:
-                        login_btn = locator.first
-                        break
-
-                if login_btn:
-                    await login_btn.click(timeout=10000)
-                    print("[INFO] Clicked login button ✅")
-                else:
-                    raise Exception("❌ Login button not found on page.")
-
-            except Exception as e:
-                await page.screenshot(path="debug-login-error.png")
-                print(f"[ERROR] Login button issue: {e}")
-                raise
-
-            # --- Wait after login ---
+            # Debugging after login
             await page.wait_for_timeout(5000)
+            print(f"[DEBUG] Current page: {await page.title()} → {page.url}")
 
-            # --- Verify login worked (check homepage composer) ---
-            print("[INFO] Checking for composer after login...")
-            if await page.locator("div[contenteditable='true']").count() == 0:
+            # Retry loop: check if logged in
+            success = False
+            for attempt in range(3):
+                print(f"[INFO] Checking composer... attempt {attempt+1}/3")
+                if await page.locator("div[contenteditable='true']").count() > 0 \
+                   or await page.locator("textarea").count() > 0:
+                    success = True
+                    break
+                await page.wait_for_timeout(5000)
+
+            if not success:
                 await page.screenshot(path="login-failed.png")
                 raise Exception("❌ Login failed. Screenshot saved → login-failed.png")
 
             print("[INFO] Logged in successfully ✅")
 
-            # --- Example post ---
+            # Post
             post_text = "Whizz co-founder says Trump’s Chicago crackdown is scaring delivery workers off the streets\nRead more: https://techcrunch.com/"
-            print(f"[INFO] Will post: {post_text[:80]}...")
-
-            composer = page.locator("div[contenteditable='true']").first
+            composer = page.locator("div[contenteditable='true'], textarea").first
             await composer.click()
             await composer.fill(post_text)
 
-            # Click "Post"
-            post_button = page.get_by_role("button", name="Post")
+            post_button = page.get_by_role("button", name="Post").first
             await post_button.click(timeout=10000)
 
             print("[INFO] Post submitted ✅")
@@ -88,7 +74,6 @@ async def post_to_threads():
             raise
         finally:
             await browser.close()
-
 
 if __name__ == "__main__":
     asyncio.run(post_to_threads())
