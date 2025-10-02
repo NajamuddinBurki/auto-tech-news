@@ -2,9 +2,11 @@ import os
 import asyncio
 from playwright.async_api import async_playwright
 
-# ✅ Hardcoded fallback credentials (use GitHub secrets in production!)
+# Hardcoded fallback (you asked me to keep them here)
 USERNAME = os.getenv("THREADS_USERNAME", "thenajamburki")
 PASSWORD = os.getenv("THREADS_PASSWORD", "Jeju12345@")
+
+POST_TEXT = "🚀 Auto-post test from GitHub Actions!"
 
 async def post_to_threads():
     async with async_playwright() as p:
@@ -14,41 +16,42 @@ async def post_to_threads():
         page = await context.new_page()
 
         print("[INFO] Navigating to Threads login...")
-        await page.goto("https://www.threads.net/login", timeout=60000)
+        await page.goto("https://www.threads.net/login", wait_until="networkidle")
 
+        # --- ⚡ Handle Instagram iframe login ---
+        print("[INFO] Waiting for Instagram login iframe...")
+        iframe_element = await page.wait_for_selector("iframe[src*='instagram.com']", timeout=30000)
+        frame = await iframe_element.content_frame()
+
+        if not frame:
+            raise Exception("❌ Could not switch into Instagram login iframe.")
+
+        print("[INFO] Filling username...")
+        await frame.fill("input[name='username']", USERNAME)
+        print("[INFO] Filling password...")
+        await frame.fill("input[name='password']", PASSWORD)
+
+        print("[INFO] Clicking login button...")
+        await frame.click("button[type='submit']", timeout=10000)
+
+        # --- ⚡ Verify login success ---
         try:
-            print("[INFO] Finding username field...")
-            await page.wait_for_selector("input[aria-label='Phone number, username, or email']", timeout=20000)
-            await page.fill("input[aria-label='Phone number, username, or email']", USERNAME)
+            await page.wait_for_selector("div[role='textbox']", timeout=20000)
+            print("[SUCCESS] Logged in successfully ✅")
+        except Exception:
+            await page.screenshot(path="login-failed.png")
+            raise Exception("❌ Login failed. Screenshot saved → login-failed.png")
 
-            print("[INFO] Finding password field...")
-            await page.wait_for_selector("input[aria-label='Password']", timeout=20000)
-            await page.fill("input[aria-label='Password']", PASSWORD)
+        # --- ⚡ Post content ---
+        print("[INFO] Looking for composer...")
+        await page.click("div[role='textbox']", timeout=10000)
+        await page.keyboard.type(POST_TEXT)
 
-            print("[INFO] Clicking login button...")
-            await page.click("button[type='submit']")
-            await page.wait_for_timeout(5000)  # wait for login redirect
+        print("[INFO] Clicking post button...")
+        await page.click("button:has-text('Post')", timeout=10000)
 
-            # Check if login succeeded by looking for the composer
-            print("[INFO] Checking for composer after login...")
-            if await page.query_selector("div[role='textbox']") is None:
-                await page.screenshot(path="login-failed.png")
-                raise Exception("❌ Login failed. Screenshot saved → login-failed.png")
-
-            print("[INFO] Login successful ✅")
-            # Example post
-            await page.fill("div[role='textbox']", "🚀 Auto-post test from Playwright bot!")
-            await page.click("text=Post")
-
-            print("[INFO] Post submitted successfully ✅")
-
-        except Exception as e:
-            await page.screenshot(path="fatal-error.png")
-            print(f"[FATAL] {e}")
-            raise
-
-        finally:
-            await browser.close()
+        print("[SUCCESS] Post created successfully ✅")
+        await browser.close()
 
 if __name__ == "__main__":
     asyncio.run(post_to_threads())
