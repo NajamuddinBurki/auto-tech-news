@@ -1,87 +1,88 @@
+import os
 import asyncio
 from playwright.async_api import async_playwright
-import os
 
-# Credentials with env override
+# --- Credentials ---
 USERNAME = os.getenv("thenajamburki", "thenajamburki")
 PASSWORD = os.getenv("Jeju12345@", "Jeju12345@")
-THREADS_URL = "https://www.threads.net/login"
+
+POST_TEXT = "Whizz co-founder says Trump’s Chicago crackdown is scaring delivery workers off the streets  Read more: https://techcrunch.com"
 
 async def post_to_threads():
     async with async_playwright() as p:
+        print("[INFO] Launching browser...")
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()
         page = await context.new_page()
 
         print("[INFO] Navigating to Threads login...")
-        await page.goto(THREADS_URL, timeout=60000)
+        await page.goto("https://www.threads.net/login", timeout=60000)
 
-        # Save debug info
-        await page.screenshot(path="debug-login-page.png", full_page=True)
-        html = await page.content()
-        with open("debug-login-page.html", "w", encoding="utf-8") as f:
-            f.write(html)
+        # --- Username field ---
+        print("[INFO] Finding username field...")
+        await page.fill("input[type='text']", USERNAME)
 
-        # Try multiple login field selectors
-        username_selectors = [
-            "input[name='username']",
-            "input[name='email']",
-            "input[name='usernameOrEmail']",
-            "input[name='usernameOrPhone']",
-            "input[type='text']",
-            "//input[contains(@aria-label, 'Phone') or contains(@aria-label, 'Email')]",
-            "//input[@autocomplete='username']"
-        ]
-        password_selectors = [
-            "input[name='password']",
-            "//input[@type='password']"
-        ]
+        # --- Password field ---
+        print("[INFO] Finding password field...")
+        await page.fill("//input[@type='password']", PASSWORD)
 
-        username_box = None
-        for sel in username_selectors:
-            try:
-                username_box = await page.wait_for_selector(sel, timeout=5000)
-                if username_box:
-                    print(f"[INFO] Found username field with selector: {sel}")
-                    break
-            except:
-                continue
-
-        if not username_box:
-            raise Exception("❌ Could not find username field. Check debug-login-page.png & debug-login-page.html")
-
-        await username_box.fill(USERNAME)
-
-        # Find password field
-        password_box = None
-        for sel in password_selectors:
-            try:
-                password_box = await page.wait_for_selector(sel, timeout=5000)
-                if password_box:
-                    print(f"[INFO] Found password field with selector: {sel}")
-                    break
-            except:
-                continue
-
-        if not password_box:
-            raise Exception("❌ Could not find password field. Check debug-login-page.png & debug-login-page.html")
-
-        await password_box.fill(PASSWORD)
-
-        # Click login button
+        # --- FIXED Login Button Click ---
         try:
-            await page.click("button[type='submit'], text=Log in, text=Log In", timeout=10000)
-        except:
-            raise Exception("❌ Could not find login button.")
+            print("[INFO] Trying to click login button...")
 
-        print("[INFO] Login submitted. Waiting for homepage...")
-        await page.wait_for_timeout(10000)
-        await page.screenshot(path="after-login.png", full_page=True)
+            login_btn = None
+            for selector in [
+                "button[type='submit']",
+                "text='Log in'",
+                "text='Log In'"
+            ]:
+                locator = page.locator(selector)
+                if await locator.count() > 0:
+                    login_btn = locator
+                    break
 
-        # Continue posting logic here...
-        print("[INFO] Login successful!")
+            if login_btn:
+                await login_btn.click(timeout=10000)
+                print("[INFO] Clicked login button ✅")
+            else:
+                raise Exception("❌ Login button not found on page.")
+
+        except Exception as e:
+            await page.screenshot(path="debug-login-error.png")
+            print(f"[ERROR] Login button issue: {e}")
+            raise
+
+        # --- Wait for homepage load ---
+        await page.wait_for_timeout(5000)
+
+        # --- Try to find composer ---
+        try:
+            print("[INFO] Locating composer...")
+            composer = page.locator("textarea, div[contenteditable='true']")
+            if await composer.count() == 0:
+                raise Exception("Composer not found")
+
+            await composer.first.click()
+            await composer.first.fill(POST_TEXT)
+
+            print("[INFO] Clicking Post button...")
+            await page.click("text=Post", timeout=10000)
+            print("[INFO] Post submitted ✅")
+
+        except Exception as e:
+            await page.screenshot(path="debug-post-error.png")
+            html = await page.content()
+            with open("page-source.html", "w", encoding="utf-8") as f:
+                f.write(html)
+            print(f"[ERROR] Posting failed: {e}")
+            raise
 
         await browser.close()
 
+
 if __name__ == "__main__":
-    asyncio.run(post_to_threads())
+    try:
+        asyncio.run(post_to_threads())
+    except Exception as e:
+        print(f"Error: {e}")
+        exit(1)
