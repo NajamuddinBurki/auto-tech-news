@@ -1,7 +1,8 @@
 import asyncio
 from playwright.async_api import async_playwright
-import os, time
+import os
 
+# Credentials with env override
 USERNAME = os.getenv("thenajamburki", "thenajamburki")
 PASSWORD = os.getenv("Jeju12345@", "Jeju12345@")
 THREADS_URL = "https://www.threads.net/login"
@@ -15,7 +16,7 @@ async def post_to_threads():
         print("[INFO] Navigating to Threads login...")
         await page.goto(THREADS_URL, timeout=60000)
 
-        # Save page for debugging
+        # Save debug info
         await page.screenshot(path="debug-login-page.png", full_page=True)
         html = await page.content()
         with open("debug-login-page.html", "w", encoding="utf-8") as f:
@@ -26,7 +27,7 @@ async def post_to_threads():
             "input[name='username']",
             "input[name='email']",
             "input[name='usernameOrEmail']",
-            "input[name='usernameOrPhone']",  
+            "input[name='usernameOrPhone']",
             "input[type='text']",
             "//input[contains(@aria-label, 'Phone') or contains(@aria-label, 'Email')]",
             "//input[@autocomplete='username']"
@@ -51,7 +52,7 @@ async def post_to_threads():
 
         await username_box.fill(USERNAME)
 
-        # Find password
+        # Find password field
         password_box = None
         for sel in password_selectors:
             try:
@@ -77,8 +78,8 @@ async def post_to_threads():
         await page.wait_for_timeout(10000)
         await page.screenshot(path="after-login.png", full_page=True)
 
-        # Continue posting...
-        print("[INFO] Login step completed!")
+        # Continue posting logic here...
+        print("[INFO] Login successful!")
 
         await browser.close()
 
